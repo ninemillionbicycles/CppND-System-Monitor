@@ -68,11 +68,37 @@ vector<int> LinuxParser::Pids() {
   return pids;
 }
 
-// TODO: Read and return the system memory utilization
-float LinuxParser::MemoryUtilization() { return 0.0; }
+// DONE: Read and return the system memory utilization
+float LinuxParser::MemoryUtilization() {
+  string line;
+  int input[2]; // memory_total, memory_free
+  string key;
+  long memory_total, memory_free;
+  std::ifstream filestream(kProcDirectory + kMeminfoFilename);
+  if (filestream.is_open()) {
+    for(int i = 0; i < 2; i++) {
+      std::getline(filestream, line);
+      std::istringstream linestream(line);
+      linestream >> key >> input[i];
+    }
+  }
+  memory_total = input[0];
+  memory_free = input[1];
+  return 1.0 * (memory_total - memory_free) / memory_total;
+}
 
 // TODO: Read and return the system uptime
-long LinuxParser::UpTime() { return 0; }
+long LinuxParser::UpTime() {
+  long uptime;
+  string line;
+  std::ifstream stream(kProcDirectory + kUptimeFilename);
+  if (stream.is_open()) {
+    std::getline(stream, line);
+    std::istringstream linestream(line);
+    linestream >> uptime;
+  }
+  return uptime;
+}
 
 // DONE: Read and return the number of jiffies for the system
 long LinuxParser::Jiffies() {
@@ -100,7 +126,7 @@ long LinuxParser::IdleJiffies() {
 }
 
 // DONE: Read and return CPU utilization
-// Return vector contains the following elements: name(0), user(1), nice(2), system(3), idle(4), iowait(5), irq(6), softirq(7), steal(8), guest(9), guest_nice(10);
+// Return vector contains the following elements: name, user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice;
 vector<string> LinuxParser::CpuUtilization() { 
   string line, input;
   vector<string> result;
@@ -108,9 +134,11 @@ vector<string> LinuxParser::CpuUtilization() {
   if (stream.is_open()) {
     std::getline(stream, line);
     std::istringstream linestream(line);
-    while (linestream >> input) result.push_back(input);
-  return result;
+    while (linestream >> input) {
+      result.push_back(input);
+    }
   }
+  return result;
 }
 
 // TODO: Read and return the total number of processes
