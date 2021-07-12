@@ -87,7 +87,7 @@ float LinuxParser::MemoryUtilization() {
   return 1.0 * (memory_total - memory_free) / memory_total;
 }
 
-// TODO: Read and return the system uptime
+// DONE: Read and return the system uptime
 long LinuxParser::UpTime() {
   long uptime;
   string line;
@@ -113,7 +113,9 @@ long LinuxParser::ActiveJiffies(int pid[[maybe_unused]]) { return 0; }
 long LinuxParser::ActiveJiffies() { 
   vector<string> input = CpuUtilization();
   // active = user + nice + system + irq + softirq + steal
-  long active = std::stol(input[1]) + std::stol(input[2]) + std::stol(input[3]) + std::stol(input[6]) + std::stol(input[7]) + std::stol(input[8]);
+  long active = std::stol(input[CPUStates::kUser_]) + std::stol(input[CPUStates::kNice_]) + 
+                std::stol(input[CPUStates::kSystem_]) + std::stol(input[CPUStates::kIRQ_]) + 
+                std::stol(input[CPUStates::kSoftIRQ_]) + std::stol(input[CPUStates::kSteal_]);
   return active; 
 }
 
@@ -121,7 +123,7 @@ long LinuxParser::ActiveJiffies() {
 long LinuxParser::IdleJiffies() {
   vector<string> input = CpuUtilization();
   // idle = idle + iowait;
-  long idle = std::stol(input[4]) + std::stol(input[5]);
+  long idle = std::stol(input[CPUStates::kIdle_]) + std::stol(input[CPUStates::kIOwait_]);
   return idle; 
 }
 
@@ -134,6 +136,7 @@ vector<string> LinuxParser::CpuUtilization() {
   if (stream.is_open()) {
     std::getline(stream, line);
     std::istringstream linestream(line);
+    linestream >> input; // Ignore the first entry "cpu"
     while (linestream >> input) {
       result.push_back(input);
     }
@@ -141,15 +144,42 @@ vector<string> LinuxParser::CpuUtilization() {
   return result;
 }
 
-// TODO: Read and return the total number of processes
-int LinuxParser::TotalProcesses() { return 0; }
+// DONE: Read and return the total number of processes
+int LinuxParser::TotalProcesses() { 
+  return Pids().size(); 
+}
 
-// TODO: Read and return the number of running processes
-int LinuxParser::RunningProcesses() { return 0; }
+// DONE: Read and return the number of running processes
+int LinuxParser::RunningProcesses() { 
+  string line, key, value;
+  int counter = 0;
+  for(auto id : Pids()) {
+    std::ifstream filestream(kProcDirectory + to_string(id) + kStatusFilename);
+    if (filestream.is_open()) {
+      while (std::getline(filestream, line)) {
+        std::replace(line.begin(), line.end(), ':', ' ');
+        std::istringstream linestream(line);
+        while (linestream >> key >> value) {
+          if (key == "State") {
+            if (value == "R") { counter++; }
+            else { break; }
+          }
+        }
+      }
+    }
+  }
+  return counter; 
+}
 
 // TODO: Read and return the command associated with a process
-// REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Command(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::Command(int pid) { 
+  string line;
+  std::ifstream filestream(kProcDirectory + to_string(pid) + kCmdlineFilename);
+  if (filestream.is_open()) {
+    std::getline(filestream, line);
+  }
+  return line; 
+}
 
 // TODO: Read and return the memory used by a process
 // REMOVE: [[maybe_unused]] once you define the function
