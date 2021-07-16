@@ -3,6 +3,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "process.h"
 #include "processor.h"
@@ -17,12 +18,14 @@ using std::vector;
 // DONE: Return the system's CPU
 Processor& System::Cpu() { return cpu_; }
 
-// TODO: Return a container composed of the system's processes
+// DONE: Return a container composed of the system's processes
 vector<Process>& System::Processes() { 
-    // TODO Next: Update private member variable here
-    // Step 1: Iterate through all Pids()
-    // Do I need to remove processes that disappeared from the list?
-    return processes_; 
+    processes_.clear();
+    for(auto pid : LinuxParser::Pids()) {
+        processes_.emplace_back(Process(pid));
+    } 
+    std::sort(processes_.begin(), processes_.end());
+    return processes_;
 } 
 
 // DONE: Return the system's kernel identifier (string)

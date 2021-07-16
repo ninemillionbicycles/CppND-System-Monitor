@@ -106,8 +106,12 @@ long LinuxParser::Jiffies() {
 }
 
 // TODO: Read and return the number of active jiffies for a PID
-// REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::ActiveJiffies(int pid[[maybe_unused]]) { return 0; }
+long LinuxParser::ActiveJiffies(int pid) { 
+  vector<string> input = CpuUtilization(pid);
+  long active = std::stol(input[ProcessData::kUtime_]) + std::stol(input[ProcessData::kStime_]) +
+                    std::stol(input[ProcessData::kCutime_]) + std::stol(input[ProcessData::kCstime_]);
+  return active; 
+}
 
 // DONE: Read and return the number of active jiffies for the system
 long LinuxParser::ActiveJiffies() { 
@@ -144,6 +148,26 @@ vector<string> LinuxParser::CpuUtilization() {
   return result;
 }
 
+// NEW: Read and return CPU utilization data of a process
+// Return vector contains the following elements: #14: utime, #15: stime, #16: cutime, #17: cstime, #22: starttime
+vector<string> LinuxParser::CpuUtilization(int pid) { 
+  string line, input;
+  vector<string> result;
+  int counter = 1; // IDs in /proc/[pid]/stat start with 1
+  std::ifstream stream(kProcDirectory + to_string(pid) + kStatFilename);
+  if (stream.is_open()) {
+    std::getline(stream, line);
+    std::istringstream linestream(line);
+    while (linestream >> input) {
+      if (counter == 14 || counter == 15 || counter == 16 || counter == 17 || counter == 22) {
+        result.push_back(input);
+      }
+      counter++;
+    }
+  }
+  return result;
+}
+
 // DONE: Read and return the total number of processes
 int LinuxParser::TotalProcesses() { 
   return Pids().size(); 
@@ -153,8 +177,8 @@ int LinuxParser::TotalProcesses() {
 int LinuxParser::RunningProcesses() { 
   string line, key, value;
   int counter = 0;
-  for(auto id : Pids()) {
-    std::ifstream filestream(kProcDirectory + to_string(id) + kStatusFilename);
+  for(auto pid : Pids()) {
+    std::ifstream filestream(kProcDirectory + to_string(pid) + kStatusFilename);
     if (filestream.is_open()) {
       while (std::getline(filestream, line)) {
         std::replace(line.begin(), line.end(), ':', ' ');
@@ -171,7 +195,7 @@ int LinuxParser::RunningProcesses() {
   return counter; 
 }
 
-// TODO: Read and return the command associated with a process
+// DONE: Read and return the command associated with a process
 string LinuxParser::Command(int pid) { 
   string line;
   std::ifstream filestream(kProcDirectory + to_string(pid) + kCmdlineFilename);
@@ -187,12 +211,39 @@ string LinuxParser::Ram(int pid[[maybe_unused]]) { return string(); }
 
 // TODO: Read and return the user ID associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Uid(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::Uid(int pid) { 
+  string line;
+  string key;
+  string value;
+  std::ifstream filestream(kProcDirectory + to_string(pid) + kStatusFilename);
+  if (filestream.is_open()) {
+    while (std::getline(filestream, line)) {
+      std::replace(line.begin(), line.end(), ':', ' ');
+      std::istringstream linestream(line);
+      while (linestream >> key >> value) {
+        if (key == "Uid") {
+          // result = value;
+          break;
+        }
+      }
+      break;
+    }
+  }
+  return value;
+}
 
-// TODO: Read and return the user associated with a process
+// TODO: Read and return the user associated with a process -> NEXT STEP!
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::User(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::User(int pid) { 
+  // Uid(pid);
+  return "User"; 
+}
 
-// TODO: Read and return the uptime of a process
-// REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::UpTime(int pid[[maybe_unused]]) { return 0; }
+// DONE: Read and return the uptime of a process
+long LinuxParser::UpTime(int pid) { return UpTime() - StartTime(pid) / CLK_TCK; }
+
+// NEW: Read and return the time when the process started in clock ticks
+long LinuxParser::StartTime(int pid) {
+  vector<string> input = CpuUtilization(pid);
+  return std::stol(input[ProcessData::kStarttime_]);
+}
