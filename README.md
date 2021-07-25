@@ -5,11 +5,11 @@ This is my result for the System Monitor project in the Object Oriented Programm
 ![System Monitor](images/monitor.png)
 
 ## ncurses
-[ncurses](https://www.gnu.org/software/ncurses/) is a library that facilitates text-based graphical output in the terminal. This project relies on ncurses for display output.
+[`ncurses`](https://www.gnu.org/software/ncurses/) is a library that facilitates text-based graphical output in the terminal. This project relies on ncurses for display output.
 
-Within the Udacity Workspace, `.student_bashrc` automatically installs ncurses every time you launch the Workspace.
+Within the Udacity Workspace, `.student_bashrc` automatically installs `ncurses` every time the Workspace is launched.
 
-If you are not using the Workspace, install ncurses within your own Linux environment: `sudo apt install libncurses5-dev libncursesw5-dev`
+If you are not using the Workspace, install `ncurses` within your own Linux environment: `sudo apt install libncurses5-dev libncursesw5-dev`
 
 ## Make
 This project uses [Make](https://www.gnu.org/software/make/). The Makefile has four targets:
