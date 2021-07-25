@@ -1,9 +1,9 @@
 #include <dirent.h>
 #include <unistd.h>
+#include <cassert>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <cassert>
 
 #include "linux_parser.h"
 
@@ -143,7 +143,8 @@ vector<string> LinuxParser::CpuUtilization() {
 }
 
 // Read and return CPU utilization data of a process
-// Return vector contains the following elements: utime, stime, cutime, cstime, starttime
+// Return vector contains the following elements: utime, stime, cutime, cstime,
+// starttime
 vector<string> LinuxParser::CpuUtilization(int pid) {
   string line, input;
   vector<string> result;
@@ -212,7 +213,9 @@ int LinuxParser::Ram(int pid) {
       std::replace(line.begin(), line.end(), ':', ' ');
       std::istringstream linestream(line);
       linestream >> key >> value;
-      if (key == "VmSize") { return std::stoi(value) / 1024; }
+      if (key == "VmSize") {
+        return std::stoi(value) / 1024;
+      }
     }
   }
   return 0;

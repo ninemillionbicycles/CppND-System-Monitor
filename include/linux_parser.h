@@ -66,6 +66,6 @@ enum ProcessData {
   kStarttime_,
 };
 
-}; // namespace LinuxParser
+};  // namespace LinuxParser
 
 #endif

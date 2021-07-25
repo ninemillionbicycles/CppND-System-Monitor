@@ -2,10 +2,10 @@
 #define PROCESSOR_H
 
 class Processor {
-  public:
+ public:
   float Utilization();
-  
-  private:
+
+ private:
   long active_;
   long total_;
   long prev_active_;
